@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Compai — Reporte de Turno</title>
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --card: #ffffff;
+    --text: #1a1a18;
+    --text2: #6b6b66;
+    --text3: #a0a09a;
+    --border: rgba(0,0,0,0.10);
+    --border2: rgba(0,0,0,0.18);
+    --green-bg: #EAF3DE; --green-border: #639922; --green-text: #27500A;
+    --yellow-bg: #FAEEDA; --yellow-border: #BA7517; --yellow-text: #633806;
+    --red-bg: #FCEBEB; --red-border: #E24B4A; --red-text: #791F1F;
+    --blue-bg: #E6F1FB; --blue-border: #378ADD; --blue-text: #0C447C;
+    --radius: 12px; --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* HEADER */
+  .header { background: var(--card); border-bottom: 0.5px solid var(--border); padding: 14px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
+  .header-icon { width: 38px; height: 38px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .header-name { font-size: 17px; font-weight: 600; }
+  .header-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+  .turno-badge { margin-left: auto; font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 20px; background: var(--blue-bg); color: var(--blue-text); white-space: nowrap; }
+
+  /* PROGRESS */
+  .progress-wrap { padding: 14px 20px 0; }
+  .progress-bar { display: flex; gap: 6px; margin-bottom: 6px; }
+  .prog-dot { flex: 1; height: 4px; border-radius: 2px; background: var(--border); transition: background 0.25s; }
+  .prog-dot.done { background: var(--green-border); }
+  .prog-dot.active { background: var(--blue-border); }
+  .progress-label { font-size: 12px; color: var(--text2); }
+
+  /* CONTENT */
+  .content { padding: 12px 20px 100px; }
+  .section-title { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 12px; margin-top: 4px; }
+
+  /* QUESTION CARD */
+  .qcard { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; }
+  .qnum { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .qtext { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 14px; line-height: 1.4; }
+
+  /* OPTIONS */
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .opts.cols-1 { grid-template-columns: 1fr; }
+  .opts.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .opt { padding: 12px 8px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--card); cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text); text-align: center; transition: all 0.12s; line-height: 1.3; -webkit-user-select: none; }
+  .opt:active { transform: scale(0.97); }
+  .opt.c-green { border-color: var(--green-border); }
+  .opt.c-yellow { border-color: var(--yellow-border); }
+  .opt.c-red { border-color: var(--red-border); }
+  .opt.sel-green { background: var(--green-bg); border-color: var(--green-border); color: var(--green-text); }
+  .opt.sel-yellow { background: var(--yellow-bg); border-color: var(--yellow-border); color: var(--yellow-text); }
+  .opt.sel-red { background: var(--red-bg); border-color: var(--red-border); color: var(--red-text); }
+  .opt.sel-blue { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue-text); }
+
+  /* TEXTAREA */
+  .qnote { font-size: 12px; color: var(--text3); margin-bottom: 8px; }
+  textarea { width: 100%; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--bg); font-size: 14px; color: var(--text); font-family: inherit; resize: none; min-height: 80px; outline: none; transition: border-color 0.15s; }
+  textarea:focus { border-color: var(--blue-border); }
+
+  /* CHECKLIST */
+  .chk-item { display: flex; align-items: center; gap: 12px; padding: 13px 14px; background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; cursor: pointer; transition: border-color 0.12s; -webkit-user-select: none; }
+  .chk-item:active { background: var(--bg); }
+  .chk-box { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--border2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; background: var(--card); }
+  .chk-box.on { background: var(--green-border); border-color: var(--green-border); }
+  .chk-check { display: none; color: white; font-size: 14px; font-weight: 700; line-height: 1; }
+  .chk-box.on .chk-check { display: block; }
+  .chk-label { font-size: 14px; color: var(--text); line-height: 1.4; }
+  .chk-item.done .chk-label { color: var(--text2); }
+  .chk-progress { font-size: 12px; color: var(--text2); margin-bottom: 10px; }
+
+  /* FOOTER NAV */
+  .footer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 0.5px solid var(--border); padding: 12px 20px; padding-bottom: max(12px, env(safe-area-inset-bottom)); display: flex; gap: 10px; }
+  .btn-back { flex: 1; padding: 13px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--card); font-size: 14px; font-weight: 500; color: var(--text2); cursor: pointer; font-family: inherit; }
+  .btn-next { flex: 2; padding: 13px; border-radius: var(--radius-sm); border: none; background: var(--text); color: white; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+  .btn-next:active { opacity: 0.85; }
+  .btn-send { flex: 1; padding: 13px; border-radius: var(--radius-sm); border: none; background: var(--green-border); color: white; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+  .btn-send:active { opacity: 0.85; }
+  .btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* SUCCESS */
+  .success { text-align: center; padding: 60px 20px 40px; display: none; }
+  .success-circle { width: 72px; height: 72px; border-radius: 50%; background: var(--green-bg); display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 20px; }
+  .success-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+  .success-sub { font-size: 15px; color: var(--text2); line-height: 1.6; }
+  .success-time { font-size: 12px; color: var(--text3); margin-top: 16px; }
+
+  /* LOADING */
+  .sending { text-align: center; padding: 40px 20px; display: none; }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--green-border); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ERROR BANNER */
+  .error-banner { background: var(--red-bg); border: 1px solid var(--red-border); color: var(--red-text); border-radius: var(--radius-sm); padding: 12px 16px; margin: 12px 20px; font-size: 13px; display: none; }
+</style>
+</head>
+<body>
+
+<div id="app-content">
+  <!-- Header -->
+  <div class="header" id="main-header">
+    <div class="header-icon" id="dept-icon-el"></div>
+    <div>
+      <div class="header-name" id="dept-name-el"></div>
+      <div class="header-sub">Reporte de turno</div>
+    </div>
+    <div class="turno-badge" id="turno-el"></div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-wrap" id="progress-wrap">
+    <div class="progress-bar" id="progress-bar"></div>
+    <div class="progress-label" id="progress-label"></div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-banner" id="error-banner"></div>
+
+  <!-- Content -->
+  <div class="content" id="main-content"></div>
+
+  <!-- Footer -->
+  <div class="footer" id="main-footer">
+    <button class="btn-back" id="btn-back" onclick="changeSection(-1)" style="display:none">← Atrás</button>
+    <button class="btn-next" id="btn-next" onclick="changeSection(1)">Continuar →</button>
+    <button class="btn-send" id="btn-send" onclick="submitReport()" style="display:none" disabled>Enviar reporte</button>
+  </div>
+</div>
+
+<!-- Sending -->
+<div class="sending" id="sending-screen">
+  <div class="spinner"></div>
+  <div style="font-size:15px;color:var(--text2)">Enviando reporte...</div>
+</div>
+
+<!-- Success -->
+<div class="success" id="success-screen">
+  <div class="success-circle">✓</div>
+  <div class="success-title">Reporte enviado</div>
+  <div class="success-sub" id="success-sub"></div>
+  <div class="success-time" id="success-time"></div>
+</div>
+
+<script>
+// ============================================
+// CONFIGURACION — Reemplazar con tus datos de Supabase
+// ============================================
+const SUPABASE_URL = 'https://iavvdhwgjyltvoxbhsat.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhdnZkaHdnanlsdHZveGJoc2F0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODE3NjksImV4cCI6MjA5MDE1Nzc2OX0.7f4BcHVkTaLanUgWYN0P_jEQA1SSZi41rv8pJJc_z4Q';
+
+// ============================================
+// ESTRUCTURA DE PREGUNTAS POR DEPARTAMENTO
+// ============================================
+const DEPTS = {
+  alm: {
+    nombre: 'Almacén', icon: '📦', color: '#FAEEDA',
+    secciones: [
+      { label: 'Estado operativo', tipo: 'preguntas', preguntas: [
+        { q: '¿Cómo está el inventario general hoy?', tipo: 'color', opts: ['Bien abastecido', 'Stock bajo en algo', 'Stock crítico'] },
+        { q: '¿Llegó mercancía hoy?', tipo: 'blue', opts: ['Sí, todo completo', 'Sí, con faltantes', 'No llegó', 'No era esperada'] },
+        { q: '¿Los insumos fueron entregados a producción y cocina?', tipo: 'color', opts: ['Sí, todo entregado', 'Faltó algo', 'No se solicitó'] },
+        { q: '¿Hubo merma o pérdida hoy?', tipo: 'color', opts: ['No hubo merma', 'Merma leve', 'Merma significativa'] },
+        { q: '¿Qué insumo está más bajo o faltante? (puedes omitir si no aplica)', tipo: 'texto' },
+      ]},
+      { label: 'Checklist de cierre', tipo: 'checklist', items: [
+        'El área está ordenada y limpia',
+        'Todo el inventario fue registrado',
+        'Las salidas de insumos quedaron anotadas',
+        'Los productos están bien almacenados y tapados',
+        'Se verificó fecha de vencimiento de perecederos',
+        'El área quedó bajo llave o asegurada',
+      ]},
+      { label: 'Bienestar y observaciones', tipo: 'preguntas', preguntas: [
+        { q: '¿Cómo te sientes hoy en tu área de trabajo?', tipo: 'color', opts: ['Muy bien', 'Normal', 'Fue un día difícil'] },
+        { q: '¿El equipo estuvo completo hoy?', tipo: 'color', opts: ['Sí, completo', 'Faltó alguien', 'Hubo rotación'] },
+        { q: '¿Hubo algún suceso que reportar?', tipo: 'color', opts: ['No, todo bien', 'Sí, algo menor', 'Sí, algo importante'] },
+        { q: '¿Qué necesitas para mañana o qué quieres reportar?', tipo: 'texto' },
+      ]},
+    ]
+  },
+  prod: {
+    nombre: 'Producción', icon: '⚙️', color: '#E1F5EE',
+    secciones: [
+      { label: 'Estado operativo', tipo: 'preguntas', preguntas: [
+        { q: '¿Cuántas unidades se produjeron hoy?', tipo: 'blue', opts: ['Menos de 100', '100–200', '200–350', 'Más de 350'] },
+        { q: '¿El estándar de calidad se cumplió?', tipo: 'color', opts: ['Sí, todo bien', 'Algunos defectos menores', 'Problemas de calidad'] },
+        { q: '¿La masa y rellenos estuvieron bien?', tipo: 'color', opts: ['Todo correcto', 'Algo fuera de estándar', 'Problemas serios'] },
+        { q: '¿Faltó algún insumo durante la producción?', tipo: 'color', opts: ['No, todo completo', 'Faltó algo', 'Paró producción'] },
+        { q: '¿Qué sabores se produjeron hoy? (puedes omitir si no aplica)', tipo: 'texto' },
+      ]},
+      { label: 'Checklist de cierre', tipo: 'checklist', items: [
+        'El área de producción está limpia y sin residuos',
+        'Los equipos (mezcladoras, mesas) quedaron limpios',
+        'El producto terminado fue entregado o almacenado',
+        'Los insumos sobrantes fueron devueltos a almacén',
+        'Se registró la cantidad producida por sabor',
+        'Las herramientas y utensilios quedaron en su lugar',
+      ]},
+      { label: 'Bienestar y observaciones', tipo: 'preguntas', preguntas: [
+        { q: '¿Cómo estuvo el ritmo de trabajo hoy?', tipo: 'color', opts: ['Fluido y organizado', 'Normal', 'Muy exigente o caótico'] },
+        { q: '¿El equipo de producción estuvo completo?', tipo: 'color', opts: ['Sí, completo', 'Faltó alguien', 'Trabajamos con menos'] },
+        { q: '¿Hubo algún incidente o equipo con falla?', tipo: 'color', opts: ['No, todo bien', 'Algo menor', 'Falla importante'] },
+        { q: '¿Qué necesitas para el próximo turno?', tipo: 'texto' },
+      ]},
+    ]
+  },
+  coc: {
+    nombre: 'Cocina', icon: '🍳', color: '#E6F1FB',
+    secciones: [
+      { label: 'Estado operativo', tipo: 'preguntas', preguntas: [
+        { q: '¿Cómo estuvo el servicio de cocina hoy?', tipo: 'color', opts: ['Muy bien', 'Normal', 'Con problemas'] },
+        { q: '¿Se cumplió el menú del día completo?', tipo: 'color', opts: ['Sí, completo', 'Faltó algún plato', 'No se pudo cumplir'] },
+        { q: '¿Las porciones y presentación estuvieron al estándar?', tipo: 'color', opts: ['Sí, al estándar', 'Algunas variaciones', 'Fuera de estándar'] },
+        { q: '¿Faltó algún ingrediente durante el servicio?', tipo: 'color', opts: ['No, todo completo', 'Faltó algo', 'Afectó el servicio'] },
+        { q: '¿Qué se preparó hoy y qué sobró? (puedes omitir)', tipo: 'texto' },
+      ]},
+      { label: 'Checklist de cierre', tipo: 'checklist', items: [
+        'La cocina está limpia, desengrasada y ordenada',
+        'Las freidoras y equipos están limpios y apagados',
+        'Los alimentos sobrantes están tapados y refrigerados',
+        'Los cuchillos y utensilios están lavados y guardados',
+        'El gas y llamas quedaron correctamente cerrados',
+        'Se revisaron neveras y temperaturas antes de salir',
+      ]},
+      { label: 'Bienestar y observaciones', tipo: 'preguntas', preguntas: [
+        { q: '¿Cómo te sientes hoy después del turno?', tipo: 'color', opts: ['Bien, fue un buen día', 'Normal', 'Cansado o con algo que reportar'] },
+        { q: '¿El equipo de cocina trabajó completo?', tipo: 'color', opts: ['Sí, completo', 'Faltó alguien', 'Fue difícil con los que había'] },
+        { q: '¿Hubo algún suceso importante en cocina?', tipo: 'color', opts: ['No, todo bien', 'Algo menor', 'Algo que necesita atención'] },
+        { q: '¿Qué necesitas para mañana?', tipo: 'texto' },
+      ]},
+    ]
+  },
+  rest: {
+    nombre: 'Restaurante', icon: '🏪', color: '#EEEDFE',
+    secciones: [
+      { label: 'Estado operativo', tipo: 'preguntas', preguntas: [
+        { q: '¿Cómo estuvo la atención al cliente hoy?', tipo: 'color', opts: ['Excelente', 'Normal', 'Con problemas'] },
+        { q: '¿Cómo viste el movimiento de clientes hoy?', tipo: 'blue', opts: ['Muy alto', 'Normal', 'Bajo', 'Muy lento'] },
+        { q: '¿Hubo quejas o reclamos de clientes?', tipo: 'color', opts: ['No hubo quejas', '1–2 quejas menores', 'Quejas serias'] },
+        { q: '¿Los pedidos salieron a tiempo?', tipo: 'color', opts: ['Sí, sin demoras', 'Algunos retrasos', 'Muchas demoras'] },
+        { q: '¿Qué producto fue el más pedido hoy? (puedes omitir)', tipo: 'texto' },
+      ]},
+      { label: 'Checklist de cierre', tipo: 'checklist', items: [
+        'El área de atención está limpia y recogida',
+        'Las mesas y sillas quedaron ordenadas',
+        'La caja fue cuadrada y registrada',
+        'El producto sobrante fue devuelto o almacenado',
+        'Los empaques y materiales están surtidos para mañana',
+        'Las freidoras del área están limpias y apagadas',
+      ]},
+      { label: 'Bienestar y observaciones', tipo: 'preguntas', preguntas: [
+        { q: '¿Cómo fue tu experiencia de trabajo hoy?', tipo: 'color', opts: ['Muy bien', 'Normal', 'Fue un día difícil'] },
+        { q: '¿El equipo de sala estuvo completo?', tipo: 'color', opts: ['Sí, completo', 'Faltó alguien', 'Trabajamos cortos'] },
+        { q: '¿Hubo algún suceso con clientes o internamente?', tipo: 'color', opts: ['No, todo bien', 'Algo menor', 'Algo que reportar'] },
+        { q: '¿Qué observas que podría mejorar o qué necesitas?', tipo: 'texto' },
+      ]},
+    ]
+  },
+  del: {
+    nombre: 'Delivery', icon: '🛵', color: '#E1F5EE',
+    secciones: [
+      { label: 'Estado operativo', tipo: 'preguntas', preguntas: [
+        { q: '¿Cuántos pedidos se despacharon hoy?', tipo: 'blue', opts: ['Menos de 10', '10–25', '25–50', 'Más de 50'] },
+        { q: '¿Los pedidos llegaron a tiempo a los clientes?', tipo: 'color', opts: ['Sí, todos a tiempo', 'Algunos con retraso', 'Muchos con retraso'] },
+        { q: '¿Hubo pedidos fallidos o devueltos?', tipo: 'color', opts: ['Ninguno', '1–2 casos', 'Varios casos'] },
+        { q: '¿Todos los repartidores se presentaron?', tipo: 'color', opts: ['Sí, completo', 'Faltó alguien', 'Trabajamos cortos'] },
+        { q: '¿Hubo incidencia en calle o con cliente? (puedes omitir)', tipo: 'texto' },
+      ]},
+      { label: 'Checklist de cierre', tipo: 'checklist', items: [
+        'Todos los pedidos del turno están registrados',
+        'Las incidencias de entrega quedaron documentadas',
+        'Los repartidores entregaron el dinero o cierres',
+        'Las motos o vehículos están asegurados',
+        'Los pedidos sin entregar están reportados',
+        'Los datos de clientes con problema fueron anotados',
+      ]},
+      { label: 'Bienestar y observaciones', tipo: 'preguntas', preguntas: [
+        { q: '¿Cómo estuvo la operación de delivery hoy?', tipo: 'color', opts: ['Bien, fluido', 'Normal', 'Con varios problemas'] },
+        { q: '¿El equipo de repartidores rindió bien?', tipo: 'color', opts: ['Sí, muy bien', 'Normal', 'Hubo problemas'] },
+        { q: '¿Hay algo del sistema de rutas que mejorar?', tipo: 'color', opts: ['Todo bien', 'Algo que mejorar', 'Urgente cambiar algo'] },
+        { q: '¿Qué observación tienes para mañana?', tipo: 'texto' },
+      ]},
+    ]
+  },
+  adm: {
+    nombre: 'Administración', icon: '💼', color: '#F1EFE8',
+    secciones: [
+      { label: 'Estado operativo', tipo: 'preguntas', preguntas: [
+        { q: '¿La caja del día fue cuadrada correctamente?', tipo: 'color', opts: ['Sí, cuadrada', 'Diferencia menor', 'Diferencia importante'] },
+        { q: '¿Se registraron todos los ingresos y egresos?', tipo: 'color', opts: ['Sí, todo registrado', 'Faltan algunos', 'No se pudo registrar'] },
+        { q: '¿Las compras del día fueron dentro del presupuesto?', tipo: 'color', opts: ['Sí, todo bien', 'Hubo sobrecosto', 'No hubo compras hoy'] },
+        { q: '¿Hay pagos urgentes que atender mañana?', tipo: 'color', opts: ['No, todo al día', 'Sí, algo pendiente', 'Urgente resolver'] },
+        { q: '¿Qué movimiento financiero importante ocurrió hoy?', tipo: 'texto' },
+      ]},
+      { label: 'Checklist de cierre', tipo: 'checklist', items: [
+        'La caja fue cuadrada y firmada',
+        'Los reportes de cada departamento fueron recibidos',
+        'Los ingresos del día están registrados',
+        'Los gastos y compras del día están documentados',
+        'El reporte diario para dirección fue preparado',
+        'Los pendientes del día siguiente están anotados',
+      ]},
+      { label: 'Bienestar y observaciones', tipo: 'preguntas', preguntas: [
+        { q: '¿Cómo estuvo la operación administrativa hoy?', tipo: 'color', opts: ['Sin problemas', 'Con algo por resolver', 'Día complicado'] },
+        { q: '¿El equipo administrativo estuvo completo?', tipo: 'color', opts: ['Sí, completo', 'Faltó alguien', 'Hubo ausencias'] },
+        { q: '¿Hay situación financiera o de personal que reportar?', tipo: 'color', opts: ['No, todo bien', 'Algo menor', 'Requiere atención'] },
+        { q: '¿Qué necesita saber la dirección hoy?', tipo: 'texto' },
+      ]},
+    ]
+  },
+  mant: {
+    nombre: 'Mantenimiento', icon: '🔧', color: '#F1EFE8',
+    secciones: [
+      { label: 'Estado operativo', tipo: 'preguntas', preguntas: [
+        { q: '¿Todos los equipos están operativos hoy?', tipo: 'color', opts: ['Sí, todos bien', 'Alguno con falla leve', 'Equipo fuera de servicio'] },
+        { q: '¿Las freidoras y equipos de cocina están en buen estado?', tipo: 'color', opts: ['Sí, todo bien', 'Requieren revisión', 'Hay falla activa'] },
+        { q: '¿Se realizó mantenimiento preventivo hoy?', tipo: 'color', opts: ['Sí, se hizo', 'Parcialmente', 'No se pudo hacer'] },
+        { q: '¿Hay equipo que necesite reparación urgente?', tipo: 'color', opts: ['No, todo bien', 'Sí, algo pendiente', 'Urgente — afecta operación'] },
+        { q: '¿Qué equipo o área requiere atención? (puedes omitir)', tipo: 'texto' },
+      ]},
+      { label: 'Checklist de cierre', tipo: 'checklist', items: [
+        'Todos los equipos fueron revisados antes de cerrar',
+        'Las fallas detectadas quedaron documentadas',
+        'Los equipos que no se usan están apagados',
+        'No hay fugas de gas, agua o problemas eléctricos visibles',
+        'Las herramientas están guardadas en su lugar',
+        'El plan de mantenimiento del día siguiente está listo',
+      ]},
+      { label: 'Bienestar y observaciones', tipo: 'preguntas', preguntas: [
+        { q: '¿Cómo estuvo la operación de mantenimiento hoy?', tipo: 'color', opts: ['Sin novedades', 'Con alguna situación', 'Día complicado'] },
+        { q: '¿Tienes todo lo que necesitas para trabajar bien?', tipo: 'color', opts: ['Sí, todo bien', 'Falta algo', 'Hay una necesidad urgente'] },
+        { q: '¿Algo que la dirección deba saber sobre infraestructura?', tipo: 'color', opts: ['No, todo bien', 'Algo para evaluar', 'Requiere atención inmediata'] },
+        { q: '¿Qué observación o solicitud tienes?', tipo: 'texto' },
+      ]},
+    ]
+  },
+};
+
+// ============================================
+// ESTADO GLOBAL
+// ============================================
+let deptId = null;
+let dept = null;
+let seccionActual = 0;
+let respuestas = {};
+let checklist = {};
+
+// ============================================
+// INIT — Detectar departamento desde URL
+// ============================================
+function init() {
+  const params = new URLSearchParams(window.location.search);
+  deptId = params.get('dept') || 'alm';
+  dept = DEPTS[deptId];
+  if (!dept) { document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#999">Departamento no encontrado</div>'; return; }
+
+  document.title = `Compai — ${dept.nombre}`;
+  document.getElementById('dept-icon-el').textContent = dept.icon;
+  document.getElementById('dept-icon-el').style.background = dept.color;
+  document.getElementById('dept-name-el').textContent = dept.nombre;
+  document.getElementById('turno-el').textContent = getTurno();
+
+  renderSeccion();
+}
+
+function getTurno() {
+  const h = new Date().getHours();
+  return h < 14 ? 'Turno mañana' : 'Turno tarde';
+}
+
+function getTurnoId() {
+  return new Date().getHours() < 14 ? 'manana' : 'tarde';
+}
+
+// ============================================
+// RENDER
+// ============================================
+function renderSeccion() {
+  const totalSecs = dept.secciones.length;
+  const sec = dept.secciones[seccionActual];
+  const isLast = seccionActual === totalSecs - 1;
+
+  // Progress bar
+  let barHtml = '';
+  for (let i = 0; i < totalSecs; i++) {
+    const cls = i < seccionActual ? 'done' : i === seccionActual ? 'active' : '';
+    barHtml += `<div class="prog-dot ${cls}"></div>`;
+  }
+  document.getElementById('progress-bar').innerHTML = barHtml;
+  document.getElementById('progress-label').textContent = `Sección ${seccionActual + 1} de ${totalSecs} — ${sec.label}`;
+
+  // Content
+  let html = `<div class="section-title">${sec.label}</div>`;
+
+  if (sec.tipo === 'preguntas') {
+    sec.preguntas.forEach((p, pi) => {
+      const key = `${seccionActual}_${pi}`;
+      html += `<div class="qcard">`;
+      if (p.tipo !== 'texto') html += `<div class="qnum">Pregunta ${pi + 1} de ${sec.preguntas.length}</div>`;
+      html += `<div class="qtext">${p.q}</div>`;
+
+      if (p.tipo === 'texto') {
+        html += `<div class="qnote">Opcional — puedes dejarlo en blanco</div>`;
+        html += `<textarea id="ta_${key}" placeholder="Escribe aquí..." onchange="respuestas['${key}']=this.value">${respuestas[key] || ''}</textarea>`;
+      } else {
+        const cols = p.opts.length >= 4 ? '' : p.opts.length === 3 ? 'cols-3' : '';
+        html += `<div class="opts ${cols}">`;
+        p.opts.forEach((o, oi) => {
+          const colorClass = p.tipo === 'color' ? (oi === 0 ? 'c-green' : oi === 1 ? 'c-yellow' : 'c-red') : '';
+          const sel = respuestas[key] === o ? (p.tipo === 'color' ? (oi === 0 ? 'sel-green' : oi === 1 ? 'sel-yellow' : 'sel-red') : 'sel-blue') : '';
+          html += `<button class="opt ${colorClass} ${sel}" onclick="pickOpt(this,'${key}',${JSON.stringify(o)},${oi},'${p.tipo}')">${o}</button>`;
+        });
+        html += `</div>`;
+      }
+      html += `</div>`;
+    });
+
+  } else if (sec.tipo === 'checklist') {
+    const done = sec.items.filter((_, i) => checklist[`${seccionActual}_${i}`]).length;
+    html += `<div class="chk-progress">${done} de ${sec.items.length} completados</div>`;
+    sec.items.forEach((item, i) => {
+      const key = `${seccionActual}_${i}`;
+      const on = checklist[key] ? 'on' : '';
+      const doneClass = checklist[key] ? 'done' : '';
+      html += `<div class="chk-item ${doneClass}" onclick="toggleCheck('${key}',this)">
+        <div class="chk-box ${on}"><span class="chk-check">✓</span></div>
+        <span class="chk-label">${item}</span>
+      </div>`;
+    });
+  }
+
+  document.getElementById('main-content').innerHTML = html;
+  document.getElementById('main-content').scrollTop = 0;
+  window.scrollTo(0, 0);
+
+  // Footer
+  const btnBack = document.getElementById('btn-back');
+  const btnNext = document.getElementById('btn-next');
+  const btnSend = document.getElementById('btn-send');
+
+  btnBack.style.display = seccionActual > 0 ? 'block' : 'none';
+  btnNext.style.display = isLast ? 'none' : 'block';
+  btnSend.style.display = isLast ? 'block' : 'none';
+  if (isLast) btnSend.disabled = false;
+
+  hideError();
+}
+
+// ============================================
+// INTERACCIONES
+// ============================================
+function pickOpt(btn, key, val, idx, tipo) {
+  respuestas[key] = val;
+  const card = btn.closest('.qcard');
+  card.querySelectorAll('.opt').forEach((b, i) => {
+    b.classList.remove('sel-green', 'sel-yellow', 'sel-red', 'sel-blue');
+  });
+  if (tipo === 'color') btn.classList.add(idx === 0 ? 'sel-green' : idx === 1 ? 'sel-yellow' : 'sel-red');
+  else btn.classList.add('sel-blue');
+}
+
+function toggleCheck(key, item) {
+  checklist[key] = !checklist[key];
+  const box = item.querySelector('.chk-box');
+  box.classList.toggle('on', checklist[key]);
+  item.classList.toggle('done', checklist[key]);
+  const sec = dept.secciones[seccionActual];
+  const done = sec.items.filter((_, i) => checklist[`${seccionActual}_${i}`]).length;
+  document.querySelector('.chk-progress').textContent = `${done} de ${sec.items.length} completados`;
+}
+
+function changeSection(dir) {
+  seccionActual += dir;
+  if (seccionActual < 0) seccionActual = 0;
+  renderSeccion();
+}
+
+// ============================================
+// CALCULAR ESTADO GENERAL
+// ============================================
+function calcEstadoGeneral() {
+  let tieneRojo = false, tieneAmarillo = false;
+  Object.entries(respuestas).forEach(([key, val]) => {
+    const parts = key.split('_');
+    const secIdx = parseInt(parts[0]);
+    const qIdx = parseInt(parts[1]);
+    const sec = dept.secciones[secIdx];
+    if (!sec || sec.tipo !== 'preguntas') return;
+    const p = sec.preguntas[qIdx];
+    if (!p || p.tipo !== 'color') return;
+    if (p.opts.indexOf(val) === 2) tieneRojo = true;
+    if (p.opts.indexOf(val) === 1) tieneAmarillo = true;
+  });
+  return tieneRojo ? 'rojo' : tieneAmarillo ? 'amarillo' : 'verde';
+}
+
+// ============================================
+// SUBMIT — Guardar en Supabase
+// ============================================
+async function submitReport() {
+  document.getElementById('app-content').style.display = 'none';
+  document.getElementById('sending-screen').style.display = 'block';
+
+  try {
+    const estadoGeneral = calcEstadoGeneral();
+    const turno = getTurnoId();
+    const fecha = new Date().toISOString().split('T')[0];
+
+    // 1. Crear reporte
+    const reporteRes = await fetch(`${SUPABASE_URL}/rest/v1/reportes`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        departamento_id: deptId,
+        turno, fecha,
+        completado: true,
+        estado_general: estadoGeneral,
+        user_agent: navigator.userAgent.substring(0, 200)
+      })
+    });
+
+    if (!reporteRes.ok) throw new Error('Error creando reporte');
+    const [reporte] = await reporteRes.json();
+    const reporteId = reporte.id;
+
+    // 2. Guardar respuestas de preguntas
+    const respuestasArr = [];
+    dept.secciones.forEach((sec, sIdx) => {
+      if (sec.tipo === 'preguntas') {
+        sec.preguntas.forEach((p, pIdx) => {
+          const key = `${sIdx}_${pIdx}`;
+          const val = respuestas[key] || null;
+          let semaforo = 'neutro';
+          if (p.tipo === 'color' && val) {
+            const idx = p.opts.indexOf(val);
+            semaforo = idx === 0 ? 'verde' : idx === 1 ? 'amarillo' : 'rojo';
+          }
+          respuestasArr.push({
+            reporte_id: reporteId,
+            seccion: sec.tipo === 'preguntas' ? (sIdx === 0 ? 'operativo' : 'bienestar') : 'checklist',
+            pregunta: p.q,
+            respuesta: val,
+            tipo: p.tipo,
+            valor_semaforo: semaforo
+          });
+        });
+      } else if (sec.tipo === 'checklist') {
+        sec.items.forEach((item, iIdx) => {
+          const key = `${sIdx}_${iIdx}`;
+          respuestasArr.push({
+            reporte_id: reporteId,
+            seccion: 'checklist',
+            pregunta: item,
+            respuesta: checklist[key] ? 'Completado' : 'Pendiente',
+            tipo: 'check',
+            valor_semaforo: checklist[key] ? 'verde' : 'amarillo'
+          });
+        });
+      }
+    });
+
+    await fetch(`${SUPABASE_URL}/rest/v1/respuestas`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(respuestasArr)
+    });
+
+    // 3. Generar alertas automáticas si hay rojos
+    if (estadoGeneral === 'rojo' || estadoGeneral === 'amarillo') {
+      await generarAlertas(reporteId, estadoGeneral);
+    }
+
+    // SUCCESS
+    showSuccess(estadoGeneral);
+
+  } catch (err) {
+    document.getElementById('sending-screen').style.display = 'none';
+    document.getElementById('app-content').style.display = 'block';
+    showError('Hubo un problema al enviar. Verifica tu conexión e intenta de nuevo.');
+    console.error(err);
+  }
+}
+
+async function generarAlertas(reporteId, estado) {
+  const alertas = [];
+  dept.secciones.forEach((sec, sIdx) => {
+    if (sec.tipo !== 'preguntas') return;
+    sec.preguntas.forEach((p, pIdx) => {
+      const key = `${sIdx}_${pIdx}`;
+      const val = respuestas[key];
+      if (!val || p.tipo !== 'color') return;
+      const idx = p.opts.indexOf(val);
+      if (idx === 2) {
+        alertas.push({
+          tipo: 'general',
+          nivel: 'critical',
+          departamento_id: deptId,
+          mensaje: `${dept.nombre}: ${p.q} → ${val}`,
+          reporte_id: reporteId
+        });
+      } else if (idx === 1) {
+        alertas.push({
+          tipo: 'general',
+          nivel: 'warning',
+          departamento_id: deptId,
+          mensaje: `${dept.nombre}: ${p.q} → ${val}`,
+          reporte_id: reporteId
+        });
+      }
+    });
+  });
+
+  if (alertas.length > 0) {
+    await fetch(`${SUPABASE_URL}/rest/v1/alertas`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(alertas)
+    });
+  }
+}
+
+function showSuccess(estado) {
+  document.getElementById('sending-screen').style.display = 'none';
+  document.getElementById('success-screen').style.display = 'block';
+  const mensajes = {
+    verde: 'Todo está en orden. El equipo de dirección ya recibió tu reporte.',
+    amarillo: 'Reporte recibido. Hay alertas que el equipo revisará pronto.',
+    rojo: 'Reporte recibido con alertas críticas. El equipo será notificado de inmediato.'
+  };
+  document.getElementById('success-sub').textContent = mensajes[estado] || mensajes.verde;
+  const now = new Date();
+  document.getElementById('success-time').textContent = `Enviado hoy a las ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-banner');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function hideError() {
+  document.getElementById('error-banner').style.display = 'none';
+}
+
+// INIT
+init();
+</script>
+</body>
+</html>

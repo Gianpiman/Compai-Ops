@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Compai Ops — Inicio</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; min-height: 100vh; padding: 24px 20px 40px; }
+  .logo { font-size: 22px; font-weight: 700; color: #1a1a18; margin-bottom: 4px; }
+  .sub { font-size: 14px; color: #6b6b66; margin-bottom: 28px; }
+  .section { font-size: 11px; font-weight: 600; color: #a0a09a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; margin-top: 24px; }
+  .link-card { display: flex; align-items: center; gap: 12px; padding: 15px 16px; background: white; border-radius: 12px; border: 0.5px solid rgba(0,0,0,0.09); text-decoration: none; color: #1a1a18; margin-bottom: 8px; transition: background 0.12s; }
+  .link-card:active { background: #f0efe9; }
+  .link-icon { font-size: 22px; width: 36px; text-align: center; }
+  .link-name { font-size: 15px; font-weight: 600; }
+  .link-sub { font-size: 12px; color: #6b6b66; margin-top: 1px; }
+  .link-arrow { margin-left: auto; color: #c0bfb8; font-size: 16px; }
+  .dashboard-card { display: flex; align-items: center; gap: 12px; padding: 15px 16px; background: #1a1a18; border-radius: 12px; text-decoration: none; color: white; margin-bottom: 8px; }
+  .dashboard-card:active { opacity: 0.85; }
+  .dash-name { font-size: 15px; font-weight: 600; }
+  .dash-sub { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 1px; }
+</style>
+</head>
+<body>
+  <div class="logo">Compai Ops</div>
+  <div class="sub">Sistema de reportes operativos</div>
+
+  <div class="section">Dirección</div>
+  <a href="dashboard.html" class="dashboard-card">
+    <span style="font-size:22px;width:36px;text-align:center">📊</span>
+    <div>
+      <div class="dash-name">Dashboard ejecutivo</div>
+      <div class="dash-sub">Vista en tiempo real de toda la operación</div>
+    </div>
+    <span class="link-arrow" style="color:rgba(255,255,255,0.4)">→</span>
+  </a>
+
+  <div class="section">Reportes por departamento</div>
+
+  <a href="reporte.html?dept=alm" class="link-card">
+    <span class="link-icon">📦</span>
+    <div><div class="link-name">Almacén</div><div class="link-sub">Inventario, insumos, mermas</div></div>
+    <span class="link-arrow">→</span>
+  </a>
+  <a href="reporte.html?dept=prod" class="link-card">
+    <span class="link-icon">⚙️</span>
+    <div><div class="link-name">Producción</div><div class="link-sub">Empanaditas, masa, rellenos</div></div>
+    <span class="link-arrow">→</span>
+  </a>
+  <a href="reporte.html?dept=coc" class="link-card">
+    <span class="link-icon">🍳</span>
+    <div><div class="link-name">Cocina</div><div class="link-sub">Menú, platos, porciones</div></div>
+    <span class="link-arrow">→</span>
+  </a>
+  <a href="reporte.html?dept=rest" class="link-card">
+    <span class="link-icon">🏪</span>
+    <div><div class="link-name">Restaurante</div><div class="link-sub">Atención, ventas, servicio</div></div>
+    <span class="link-arrow">→</span>
+  </a>
+  <a href="reporte.html?dept=del" class="link-card">
+    <span class="link-icon">🛵</span>
+    <div><div class="link-name">Delivery</div><div class="link-sub">Pedidos, repartidores, rutas</div></div>
+    <span class="link-arrow">→</span>
+  </a>
+  <a href="reporte.html?dept=adm" class="link-card">
+    <span class="link-icon">💼</span>
+    <div><div class="link-name">Administración</div><div class="link-sub">Caja, pagos, reportes</div></div>
+    <span class="link-arrow">→</span>
+  </a>
+  <a href="reporte.html?dept=mant" class="link-card">
+    <span class="link-icon">🔧</span>
+    <div><div class="link-name">Mantenimiento</div><div class="link-sub">Equipos, freidoras, infraestructura</div></div>
+    <span class="link-arrow">→</span>
+  </a>
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compai — Dashboard Ejecutivo</title>
+<style>
+  :root {
+    --bg: #f5f4f0; --card: #ffffff; --text: #1a1a18; --text2: #6b6b66; --text3: #a0a09a;
+    --border: rgba(0,0,0,0.09); --border2: rgba(0,0,0,0.16);
+    --green-bg: #EAF3DE; --green-b: #639922; --green-t: #27500A;
+    --yellow-bg: #FAEEDA; --yellow-b: #BA7517; --yellow-t: #633806;
+    --red-bg: #FCEBEB; --red-b: #E24B4A; --red-t: #791F1F;
+    --blue-bg: #E6F1FB; --blue-b: #378ADD; --blue-t: #0C447C;
+    --radius: 12px; --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  .topbar { background: var(--card); border-bottom: 0.5px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .logo { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+  .topbar-sub { font-size: 13px; color: var(--text2); }
+  .last-update { font-size: 12px; color: var(--text3); }
+  .refresh-btn { padding: 7px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--card); font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); font-family: inherit; transition: all 0.12s; }
+  .refresh-btn:hover { background: var(--bg); }
+
+  .main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+  /* KPIs */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .kpi { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+  .kpi-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kpi-val { font-size: 28px; font-weight: 700; line-height: 1; }
+  .kpi-sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
+  .kpi.alerta { border-left: 3px solid var(--red-b); }
+  .kpi.warning { border-left: 3px solid var(--yellow-b); }
+  .kpi.ok { border-left: 3px solid var(--green-b); }
+
+  /* LAYOUT */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  /* SECTION */
+  .section-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+
+  /* DEPT CARDS */
+  .dept-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .dept-card { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; cursor: pointer; transition: border-color 0.12s, box-shadow 0.12s; }
+  .dept-card:hover { border-color: var(--border2); }
+  .dept-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .dept-icon { font-size: 18px; }
+  .dept-name { font-size: 13px; font-weight: 600; flex: 1; }
+  .sdot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .dot-g { background: var(--green-b); }
+  .dot-y { background: var(--yellow-b); }
+  .dot-r { background: var(--red-b); }
+  .dot-gray { background: var(--text3); }
+  .dept-tag { font-size: 11px; padding: 3px 8px; border-radius: 20px; display: inline-block; }
+  .tag-g { background: var(--green-bg); color: var(--green-t); }
+  .tag-y { background: var(--yellow-bg); color: var(--yellow-t); }
+  .tag-r { background: var(--red-bg); color: var(--red-t); }
+  .tag-i { background: var(--blue-bg); color: var(--blue-t); }
+  .dept-time { font-size: 11px; color: var(--text3); margin-top: 6px; }
+
+  /* ALERTAS */
+  .alert-box { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .alert-head { padding: 12px 16px; background: var(--bg); border-bottom: 0.5px solid var(--border); font-size: 12px; font-weight: 600; color: var(--text2); display: flex; justify-content: space-between; align-items: center; }
+  .alert-count { font-size: 11px; background: var(--red-bg); color: var(--red-t); padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+  .alert-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border-bottom: 0.5px solid var(--border); transition: background 0.1s; }
+  .alert-item:last-child { border-bottom: none; }
+  .alert-item:hover { background: var(--bg); }
+  .alert-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .alert-text { flex: 1; font-size: 13px; line-height: 1.4; }
+  .alert-dept { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .alert-time { font-size: 11px; color: var(--text3); white-space: nowrap; }
+  .alert-resolve { font-size: 11px; color: var(--blue-t); cursor: pointer; margin-top: 4px; background: none; border: none; font-family: inherit; padding: 0; }
+  .no-alerts { padding: 24px; text-align: center; font-size: 14px; color: var(--text3); }
+
+  /* DETAIL PANEL */
+  .detail-panel { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .detail-head { padding: 14px 18px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .detail-title { font-size: 15px; font-weight: 600; }
+  .detail-turno { font-size: 12px; background: var(--blue-bg); color: var(--blue-t); padding: 3px 9px; border-radius: var(--radius-sm); margin-left: auto; }
+  .detail-empty { padding: 32px; text-align: center; font-size: 14px; color: var(--text3); }
+  .rrow { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 18px; border-bottom: 0.5px solid var(--border); gap: 16px; }
+  .rrow:last-child { border-bottom: none; }
+  .rq { font-size: 13px; color: var(--text2); flex: 1; }
+  .ra { font-size: 13px; font-weight: 600; color: var(--text); text-align: right; max-width: 55%; }
+  .ra.verde { color: var(--green-t); }
+  .ra.amarillo { color: var(--yellow-t); }
+  .ra.rojo { color: var(--red-t); }
+  .rsec { padding: 8px 18px; background: var(--bg); font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 0.5px solid var(--border); }
+
+  /* LOADING */
+  .loading { text-align: center; padding: 60px 20px; color: var(--text3); font-size: 14px; }
+  .spinner { width: 28px; height: 28px; border: 2px solid var(--border2); border-top-color: var(--green-b); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 768px) {
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+    .dept-grid { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+    .main { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div>
+      <div class="logo">Compai Ops</div>
+      <div class="topbar-sub" id="dash-date">Cargando...</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="last-update" id="last-update"></span>
+    <button class="refresh-btn" onclick="loadAll()">↻ Actualizar</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- KPIs -->
+  <div class="kpi-row" id="kpi-row">
+    <div class="loading" style="grid-column:span 4"><div class="spinner"></div>Cargando datos...</div>
+  </div>
+
+  <!-- Departamentos -->
+  <div class="section-title">Estado por departamento</div>
+  <div class="dept-grid" id="dept-grid" style="margin-bottom:20px">
+    <div class="loading" style="grid-column:span 4"><div class="spinner"></div></div>
+  </div>
+
+  <div class="grid-3">
+    <!-- Alertas -->
+    <div>
+      <div class="section-title">Alertas activas</div>
+      <div class="alert-box" id="alertas-box">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Detail -->
+    <div>
+      <div class="section-title" id="detail-section-title">Detalle del reporte</div>
+      <div class="detail-panel" id="detail-panel">
+        <div class="detail-empty">Haz clic en un departamento para ver su reporte</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL = 'https://iavvdhwgjyltvoxbhsat.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhdnZkaHdnanlsdHZveGJoc2F0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODE3NjksImV4cCI6MjA5MDE1Nzc2OX0.7f4BcHVkTaLanUgWYN0P_jEQA1SSZi41rv8pJJc_z4Q';
+
+const DEPTS_INFO = {
+  alm: { nombre: 'Almacén', icon: '📦' },
+  prod: { nombre: 'Producción', icon: '⚙️' },
+  coc: { nombre: 'Cocina', icon: '🍳' },
+  rest: { nombre: 'Restaurante', icon: '🏪' },
+  del: { nombre: 'Delivery', icon: '🛵' },
+  adm: { nombre: 'Administración', icon: '💼' },
+  mant: { nombre: 'Mantenimiento', icon: '🔧' },
+};
+
+const DEPT_ORDER = ['alm', 'prod', 'coc', 'rest', 'del', 'adm', 'mant'];
+
+async function api(path) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+  });
+  if (!res.ok) throw new Error('API error: ' + res.status);
+  return res.json();
+}
+
+function setDate() {
+  const d = new Date();
+  const days = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const turno = d.getHours() < 14 ? 'Turno mañana' : 'Turno tarde';
+  document.getElementById('dash-date').textContent = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} · ${turno}`;
+}
+
+function timeAgo(ts) {
+  const diff = Math.floor((Date.now() - new Date(ts)) / 60000);
+  if (diff < 1) return 'Ahora mismo';
+  if (diff < 60) return `Hace ${diff} min`;
+  if (diff < 1440) return `Hace ${Math.floor(diff/60)}h`;
+  return `Hace ${Math.floor(diff/1440)}d`;
+}
+
+function formatTime(ts) {
+  const d = new Date(ts);
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+async function loadAll() {
+  setDate();
+  document.getElementById('last-update').textContent = 'Actualizando...';
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+
+    const [reportes, alertas] = await Promise.all([
+      api(`vista_resumen_diario?fecha=eq.${today}&select=*&order=enviado_at.desc`),
+      api(`vista_alertas_hoy?select=*&order=created_at.desc&limit=20`)
+    ]);
+
+    renderKPIs(reportes, alertas);
+    renderDepts(reportes);
+    renderAlertas(alertas);
+
+    document.getElementById('last-update').textContent = `Actualizado a las ${new Date().toLocaleTimeString('es', {hour:'2-digit',minute:'2-digit'})}`;
+  } catch (err) {
+    console.error(err);
+    document.getElementById('last-update').textContent = 'Error de conexión';
+  }
+}
+
+function renderKPIs(reportes, alertas) {
+  const deptsConReporte = new Set(reportes.map(r => r.departamento_id));
+  const totalDepts = 7;
+  const conReporte = deptsConReporte.size;
+  const sinReporte = totalDepts - conReporte;
+  const criticas = alertas.filter(a => a.nivel === 'critical').length;
+  const warnings = alertas.filter(a => a.nivel === 'warning').length;
+  const rojos = reportes.filter(r => r.estado_general === 'rojo').length;
+  const estadoGeneral = rojos > 0 ? 'Alerta' : warnings > 0 ? 'Atención' : 'Normal';
+  const estadoClass = rojos > 0 ? 'alerta' : warnings > 0 ? 'warning' : 'ok';
+  const estadoColor = rojos > 0 ? 'var(--red-t)' : warnings > 0 ? 'var(--yellow-t)' : 'var(--green-t)';
+
+  document.getElementById('kpi-row').innerHTML = `
+    <div class="kpi ok">
+      <div class="kpi-label">Reportes recibidos</div>
+      <div class="kpi-val">${conReporte} / ${totalDepts}</div>
+      <div class="kpi-sub">${sinReporte > 0 ? `${sinReporte} pendiente${sinReporte>1?'s':''}` : 'Todos completos'}</div>
+    </div>
+    <div class="kpi ${criticas > 0 ? 'alerta' : 'ok'}">
+      <div class="kpi-label">Alertas críticas</div>
+      <div class="kpi-val" style="color:${criticas>0?'var(--red-t)':'var(--green-t)'}">${criticas}</div>
+      <div class="kpi-sub">${criticas > 0 ? 'Requieren atención inmediata' : 'Sin alertas críticas'}</div>
+    </div>
+    <div class="kpi ${warnings > 0 ? 'warning' : 'ok'}">
+      <div class="kpi-label">Advertencias</div>
+      <div class="kpi-val" style="color:${warnings>0?'var(--yellow-t)':'var(--green-t)'}">${warnings}</div>
+      <div class="kpi-sub">${warnings > 0 ? 'Áreas a monitorear' : 'Sin advertencias'}</div>
+    </div>
+    <div class="kpi ${estadoClass}">
+      <div class="kpi-label">Estado general</div>
+      <div class="kpi-val" style="color:${estadoColor}">${estadoGeneral}</div>
+      <div class="kpi-sub">Basado en reportes de hoy</div>
+    </div>
+  `;
+}
+
+function renderDepts(reportes) {
+  const byDept = {};
+  reportes.forEach(r => {
+    if (!byDept[r.departamento_id] || r.enviado_at > byDept[r.departamento_id].enviado_at) {
+      byDept[r.departamento_id] = r;
+    }
+  });
+
+  let html = '';
+  DEPT_ORDER.forEach(id => {
+    const info = DEPTS_INFO[id];
+    const r = byDept[id];
+    if (r) {
+      const dotClass = r.estado_general === 'verde' ? 'dot-g' : r.estado_general === 'amarillo' ? 'dot-y' : 'dot-r';
+      const tagClass = r.estado_general === 'verde' ? 'tag-g' : r.estado_general === 'amarillo' ? 'tag-y' : 'tag-r';
+      const tagText = r.estado_general === 'verde' ? 'Operativo' : r.estado_general === 'amarillo' ? 'Con alertas' : 'Atención urgente';
+      const alertCount = (r.alertas_rojas || 0) + (r.alertas_amarillas || 0);
+      html += `<div class="dept-card" onclick="loadDetalle('${id}')">
+        <div class="dept-card-top">
+          <span class="dept-icon">${info.icon}</span>
+          <span class="dept-name">${info.nombre}</span>
+          <div class="sdot ${dotClass}"></div>
+        </div>
+        <span class="dept-tag ${tagClass}">${tagText}</span>
+        ${alertCount > 0 ? `<span class="dept-tag tag-r" style="margin-left:4px">${alertCount} alerta${alertCount>1?'s':''}</span>` : ''}
+        <div class="dept-time">${timeAgo(r.enviado_at)}</div>
+      </div>`;
+    } else {
+      html += `<div class="dept-card">
+        <div class="dept-card-top">
+          <span class="dept-icon">${info.icon}</span>
+          <span class="dept-name">${info.nombre}</span>
+          <div class="sdot dot-gray"></div>
+        </div>
+        <span class="dept-tag tag-i">Sin reporte aún</span>
+        <div class="dept-time">—</div>
+      </div>`;
+    }
+  });
+
+  document.getElementById('dept-grid').innerHTML = html;
+}
+
+function renderAlertas(alertas) {
+  const box = document.getElementById('alertas-box');
+  const criticas = alertas.filter(a => a.nivel === 'critical');
+  const warns = alertas.filter(a => a.nivel === 'warning');
+  const todas = [...criticas, ...warns];
+
+  let countHtml = todas.length > 0 ? `<span class="alert-count">${todas.length}</span>` : '';
+  let html = `<div class="alert-head"><span>Alertas de hoy</span>${countHtml}</div>`;
+
+  if (todas.length === 0) {
+    html += `<div class="no-alerts">Sin alertas activas hoy</div>`;
+  } else {
+    todas.slice(0, 12).forEach(a => {
+      const color = a.nivel === 'critical' ? 'var(--red-b)' : 'var(--yellow-b)';
+      const info = DEPTS_INFO[a.departamento_id] || {};
+      html += `<div class="alert-item">
+        <div class="alert-dot" style="background:${color}"></div>
+        <div style="flex:1">
+          <div class="alert-text">${a.mensaje}</div>
+          <div class="alert-dept">${info.icon || ''} ${info.nombre || a.departamento_id}</div>
+          <button class="alert-resolve" onclick="resolverAlerta('${a.id}', this)">Marcar como resuelta</button>
+        </div>
+        <div class="alert-time">${formatTime(a.created_at)}</div>
+      </div>`;
+    });
+  }
+
+  box.innerHTML = html;
+}
+
+async function resolverAlerta(id, btn) {
+  btn.textContent = 'Resolviendo...';
+  btn.disabled = true;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/alertas?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ resuelta: true })
+    });
+    btn.closest('.alert-item').style.opacity = '0.4';
+    btn.textContent = 'Resuelta';
+  } catch { btn.textContent = 'Error'; }
+}
+
+async function loadDetalle(deptId) {
+  const info = DEPTS_INFO[deptId];
+  const panel = document.getElementById('detail-panel');
+  document.getElementById('detail-section-title').textContent = `${info.icon} ${info.nombre}`;
+  panel.innerHTML = `<div class="loading"><div class="spinner"></div></div>`;
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const reportes = await api(`reportes?departamento_id=eq.${deptId}&fecha=eq.${today}&select=*&order=enviado_at.desc&limit=2`);
+
+    if (reportes.length === 0) {
+      panel.innerHTML = `<div class="detail-empty">Sin reportes hoy para ${info.nombre}</div>`;
+      return;
+    }
+
+    const r = reportes[0];
+    const respuestas = await api(`respuestas?reporte_id=eq.${r.id}&select=*&order=created_at.asc`);
+
+    const turnoLabel = r.turno === 'manana' ? 'Turno mañana' : 'Turno tarde';
+    let html = `<div class="detail-head">
+      <span style="font-size:18px">${info.icon}</span>
+      <span class="detail-title">${info.nombre}</span>
+      <span class="detail-turno">${turnoLabel} · ${formatTime(r.enviado_at)}</span>
+    </div>`;
+
+    const secciones = ['operativo', 'checklist', 'bienestar'];
+    const secLabels = { operativo: 'Estado operativo', checklist: 'Checklist de cierre', bienestar: 'Bienestar y observaciones' };
+
+    secciones.forEach(sec => {
+      const items = respuestas.filter(rs => rs.seccion === sec);
+      if (items.length === 0) return;
+      html += `<div class="rsec">${secLabels[sec]}</div>`;
+      items.forEach(rs => {
+        const colorClass = rs.valor_semaforo || '';
+        const val = rs.respuesta || '—';
+        html += `<div class="rrow">
+          <span class="rq">${rs.pregunta}</span>
+          <span class="ra ${colorClass}">${val}</span>
+        </div>`;
+      });
+    });
+
+    panel.innerHTML = html;
+  } catch (err) {
+    panel.innerHTML = `<div class="detail-empty">Error cargando datos</div>`;
+    console.error(err);
+  }
+}
+
+// Auto-refresh cada 2 minutos
+setInterval(loadAll, 120000);
+loadAll();
+</script>
+</body>
+</html>
