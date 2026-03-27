@@ -417,7 +417,7 @@ function renderSeccion() {
         p.opts.forEach((o, oi) => {
           const colorClass = p.tipo === 'color' ? (oi === 0 ? 'c-green' : oi === 1 ? 'c-yellow' : 'c-red') : '';
           const sel = respuestas[key] === o ? (p.tipo === 'color' ? (oi === 0 ? 'sel-green' : oi === 1 ? 'sel-yellow' : 'sel-red') : 'sel-blue') : '';
-          html += `<button class="opt ${colorClass} ${sel}" onclick="pickOpt(this,'${key}',${JSON.stringify(o)},${oi},'${p.tipo}')">${o}</button>`;
+          html += `<button class="opt ${colorClass} ${sel}" data-key="${key}" data-idx="${oi}" data-tipo="${p.tipo}">${o}</button>`;
         });
         html += `</div>`;
       }
@@ -458,14 +458,6 @@ function renderSeccion() {
 // ============================================
 // INTERACCIONES
 // ============================================
-function handleOpt(btn) {
-  const key = btn.dataset.key;
-  const val = btn.dataset.val;
-  const idx = parseInt(btn.dataset.idx);
-  const tipo = btn.dataset.tipo;
-  pickOpt(btn, key, val, idx, tipo);
-}
-
 function pickOpt(btn, key, val, idx, tipo) {
   respuestas[key] = val;
   const card = btn.closest('.qcard');
@@ -671,6 +663,29 @@ function showError(msg) {
 function hideError() {
   document.getElementById('error-banner').style.display = 'none';
 }
+
+// EVENT LISTENER GLOBAL PARA BOTONES
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.opt');
+  if (!btn) return;
+  e.preventDefault();
+  const key = btn.dataset.key;
+  const idx = parseInt(btn.dataset.idx);
+  const tipo = btn.dataset.tipo;
+  const val = btn.textContent.trim();
+  if (!key) return;
+  respuestas[key] = val;
+  const card = btn.closest('.qcard');
+  if (!card) return;
+  card.querySelectorAll('.opt').forEach(b => {
+    b.classList.remove('sel-green', 'sel-yellow', 'sel-red', 'sel-blue');
+  });
+  if (tipo === 'color') {
+    btn.classList.add(idx === 0 ? 'sel-green' : idx === 1 ? 'sel-yellow' : 'sel-red');
+  } else {
+    btn.classList.add('sel-blue');
+  }
+});
 
 // INIT
 init();
